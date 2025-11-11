@@ -24,7 +24,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --onefile --windowed --icon=assets/icon.ico ChemCalc.py
+          pyinstaller --onefile --windowed --icon=icons/chemcalc.ico ChemCalc.py
 
       - name: Upload EXE Artifact
         uses: actions/upload-artifact@v4
