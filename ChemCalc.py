@@ -120,7 +120,7 @@ class ChemCalc:
             # Adjust for body surface area (optional)
             # BSA (Du Bois formula)
             bsa = 0.007184 * pow(weight, 0.425) * pow(height, 0.725)
-            egfr_bsa = egfr * (1.73 / bsa)
+            egfr_bsa = egfr * (bsa/1.73)
 
             self.eGFR_ui.result.config(text=f"EGFR: {egfr_bsa:.1f} mL/min")
 
