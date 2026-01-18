@@ -125,7 +125,8 @@ class ChemCalc:
             else:
                 stage, color, msg = "G5 (Kidney Failure)", "danger", "End-stage renal disease. Dialysis likely needed."
             
-            scr_mgdl = formulas.creat_umoll_to_mgdl(float(creat_val))
+            if creat_unit.lower() in ("umol/L", "umol", "µmol/l", "µmol/L"): scr_mgdl = formulas.creat_umoll_to_mgdl(float(creat_val))
+            else: scr_mgdl = float(creat_val)
             equation = (
             "Equation Used: CKD-EPI 2021\n"
             f"kappa = 0.7 if sex is female and 0.9 for male\n"
@@ -184,7 +185,8 @@ class ChemCalc:
             else:
                 stage, msg, color = "Kidney Failure", "End-stage kidney disease (Stage 5); dialysis likely indicated.", "danger"
 
-            scr_mgdl = formulas.creat_umoll_to_mgdl(float(creat_val))
+            if creat_unit.lower() in ("umol/L", "umol", "µmol/l", "µmol/L"): scr_mgdl = formulas.creat_umoll_to_mgdl(float(creat_val))
+            else: scr_mgdl = float(creat_val)
             equation = (
                 "\n\nEquation Used\n NB: creatinine is first converted to mg/dL and height to cm\n"
                 f" if age is < 1 then k = 0.45,\n"
@@ -218,11 +220,14 @@ class ChemCalc:
             else:
                 category, color, message = "Macroalbuminuria", "danger", "Severe kidney damage (overt nephropathy)."
 
+            if alb_unit.lower() in ("mg/l", "mg/L"): alb_mgdl = formulas.mgl_to_mgdl(float(alb_val))
+            else: alb_mgdl = float(alb_val)
+            if cr_unit.lower() in ("umol/l", "umol", "µmol/l", "µmol/L"): creat_mgdl = formulas.creat_umoll_to_mgdl(float(cr_val))
+            else: creat_mgdl = float(cr_val)
             equation = (
                 "\nEquation Used:\n NB: Creatinine and Albumin values\n are first converted to mg/dL\n"
-                f"UACR = (Albumin[{alb_val}] / Creatinine[{cr_val} ])x1000\n"
+                f"UACR = (Albumin[{alb_mgdl:.2f}] / Creatinine[{creat_mgdl:.2f} ])x1000\n"
                 f"UACR = {acr:.2f} mg/g"
-                "Final unit: mg/g"
             )
             self.uacr_ui.result.config(text=f"UACR: {acr:.2f} mg/g", bootstyle=color)
             self.uacr_ui.interpret_text.config(text=f"{category}\n{message}", bootstyle=color)
@@ -259,10 +264,14 @@ class ChemCalc:
                 color = "danger"
                 msg = "Strongly concentrated urine or solute load (e.g. high glucose)."
 
+            if glucose_unit.lower() in ("mmol/l", "mmol"): glucose_mgdl = formulas.glucose_mmol_to_mgdl(float(glucose_val))
+            else: glucose_mgdl = float(glucose_val)
+            if urea_unit.lower() in ("mmol/l", "mmol"): urea_mgdl = formulas.urea_mmol_to_mgdl(float(urea_val))
+            else:  urea_mgdl = float(urea_val)
             equation = (
-                "\n\nEquation Used:\n NB: Glucose and Urea values are first converted to md/dL\n"
-                f"Uosm = 2(Na[{na}] + K[{k}]) + (Urea[{urea_val}] / 5.6)\n"
-                f"     + (Glucose[{glucose_val}] / 18)\n"
+                "\n\nEquation Used:\n NB: Glucose and Urea values are first converted to mg/dL\n"
+                f"Uosm = 2(Na[{na}] + K[{k}]) + (Urea[{urea_mgdl}] / 5.6)\n"
+                f"     + (Glucose[{glucose_mgdl}] / 18)\n"
                 f"Uosm = {uosm:.1f} mOsm/kg"
             )
             self.uosm_ui.result.config(text=f"Uosm: {uosm:.1f} mOsm/kg", bootstyle=color)
@@ -291,17 +300,20 @@ class ChemCalc:
             else:
                 interpretation = "High Osmolarity (Hyperosmolar)"
                 color = "danger"
-
+            
+            if glucose_unit.lower() in ("mmol/l", "mmol"): glucose_mgdl = formulas.glucose_mmol_to_mgdl(float(glucose_val))
+            else: glucose_mgdl = float(glucose_val)
+            if urea_unit.lower() in ("mmol/l", "mmol"): urea_mgdl = formulas.urea_mmol_to_mgdl(float(urea_val))
+            else:  urea_mgdl = float(urea_val)
             equation = (
-                "\n\nEquation Used:\n NB: Glucose and Urea values are first converted to md/dL\n"
-                f"Serum Osm = 2(Na[{na}] + K[{k}] + (Glucose[{glucose_val}] / 18)\n" 
-                f"             + (Urea[{urea_val}] / 5.6)\n"
+                "\n\nEquation Used:\n NB: Glucose and Urea values are first converted to mg/dL\n"
+                f"Serum Osm = 2(Na[{na}] + K[{k}] + (Glucose[{glucose_mgdl}] / 18)\n" 
+                f"             + (Urea[{urea_mgdl}] / 5.6)\n"
                 f"Serum Osm = {osm:.2f} mOsm/kg"
             )
             self.sosm_ui.result.config(text=f"{osm:.2f} mOsm/kg", bootstyle=color)
             self.sosm_ui.interpret_text.config(text=f"{interpretation}", bootstyle=color)
             self.sosm_ui.equation_text.config(text=f"{equation}")
-
 
         except ValueError as e:
             Messagebox.show_error("Invalid input", str(e))
@@ -332,12 +344,16 @@ class ChemCalc:
             else:
                 category = "Very High"; color = "danger"; msg = "Aggressive lipid-lowering therapy advised."
 
+            tc_mg = formulas.lipid_to_mgdl(float(tc_val), tc_unit, "TC")
+            tg_mg = formulas.lipid_to_mgdl(float(tg_val), tg_unit, "TG")
+            hdl_mg = formulas.lipid_to_mgdl(float(hdl_val), hdl_unit, "HDL")
+            non_hdl_mg = formulas.lipid_to_mgdl(float(non_hdl_val), hdl_unit, "HDL")
             equation = (
                 "\n\nEquation Used: Sampson Formula\n Values are first converted to mg/dL \n"
-                f"non_hdl = TC[{tc_val}] + HDL[{hdl_val}] = {non_hdl_val}\n"
-                f"LDL = (TC[{tc_val}]/0.948) - (HDL[{hdl_val}]/0.971) - [(TG[{tg_val}]/8.56)\n"
-                f"      + (TG[{tg_val}] × non_hdl[{non_hdl_val}] / 2140.)\n"
-                f"      - (TG[{tg_val}]² / 16,100)]-9.44\n"
+                f"non_hdl = TC[{tc_mg:.2f}] + HDL[{hdl_mg:.2f}] = {non_hdl_mg:.2f}\n"
+                f"LDL = (TC[{tc_mg:.2f}]/0.948) - (HDL[{hdl_mg:.2f}]/0.971) - [(TG[{tg_mg:.2f}]/8.56)\n"
+                f"      + (TG[{tg_mg:.2f}] × non_hdl[{non_hdl_mg:.2f}] / 2140.)\n"
+                f"      - (TG[{tg_mg:.2f}]² / 16,100)]-9.44\n"
                 f"LDL = {ldl:.2f}{hdl_unit}"
             )
             self.ldl_ui.result.config(text=f"LDL: {ldl:.2f}{hdl_unit}", bootstyle=color)
@@ -370,15 +386,18 @@ class ChemCalc:
             else:
                 category = "Optimal HDL (Protective)"; color = "success"; msg = "Good HDL level."
 
+            tc_mg = formulas.lipid_to_mgdl(float(tc), tc_unit, "TC")
+            tg_mg = formulas.lipid_to_mgdl(float(tg), tg_unit, "TG")
+            ldl_mg = formulas.lipid_to_mgdl(float(ldl), ldl_unit, "LDL")
             equation = (
                 "\n\nEquation Used: Reverse Sampson Formula\n Values are first converted to mg/dL \n"
-                f" numerator = (LDL[{ldl}] - (TC[{tc}] / 0.948) + (TG[{tg}] / 8.56)\n" 
-                f"             + (TG[{tg}] * TG[{tg}] / 2140)" 
-                f"             - (TG[{tg}] ** 2 / 16100) + 9.44)\n\n"
-                f" denominator = (TG[{tg}] / 2140) - (1 / 0.971)\n"
-                f" HDL = numerator / denominator"
+                f" numerator = (LDL[{ldl_mg:.2f}] - (TC[{tc_mg:.2f}] / 0.948) + (TG[{tg_mg:.2f}] / 8.56)\n" 
+                f"             + (TG[{tg_mg:.2f}] x TG[{tg_mg:.2f}] / 2140)\n" 
+                f"             - (TG[{tg_mg:.2f}]^2 / 16100) + 9.44)\n"
+                f" denominator = (TG[{tg_mg:.2f}] / 2140) - (1 / 0.971)\n\n"
+                f" HDL = numerator / denominator = {hdl:.1f}{ldl_unit}"
             )
-            self.hdl_ui.result.config(text=f"HDL: {hdl:.1f} mg/dL", bootstyle=color)
+            self.hdl_ui.result.config(text=f"HDL: {hdl:.1f}{ldl_unit}", bootstyle=color)
             self.hdl_ui.interpret_text.config(text=f"{category}\n{msg}", bootstyle=color)
             self.hdl_ui.equation_text.config(text=f"{equation}")
         except ValueError as e:
